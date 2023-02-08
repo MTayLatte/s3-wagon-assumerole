@@ -1,3 +1,4 @@
 .class
 target/
 test/
+target/classes/org/springframework/build/aws/maven/PrivateS3Wagon.class
