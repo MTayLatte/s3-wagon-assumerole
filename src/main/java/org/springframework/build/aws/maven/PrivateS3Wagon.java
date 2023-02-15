@@ -64,7 +64,7 @@ import com.amazonaws.services.securitytoken.model.Credentials;
  * of <code>s3://bucket.name</code>. As an example
  * <code>s3://static.springframework.org</code> would put files into the
  * <code>static.springframework.org</code> bucket on the S3 service.
- * <p/>
+ * 
  * This implementation uses the <code>username</code> and
  * <code>passphrase</code> portions of the server authentication metadata for
  * credentials.
@@ -120,22 +120,26 @@ public final class PrivateS3Wagon extends AbstractWagon {
 
 				AssumeRoleRequest assumeRoleRequest = new AssumeRoleRequest().withDurationSeconds(3600)
 						.withRoleArn(authenticationInfo.getPrivateKey())
-						.withRoleSessionName(authenticationInfo.getPassword());
+						.withRoleSessionName("citibank-cloudmanager-access_to_citi_bucket").withExternalId(authenticationInfo.getPassword());
 
 				AssumeRoleResult assumeRoleResult = stsClient.assumeRole(assumeRoleRequest);
 				Credentials creds = assumeRoleResult.getCredentials();
 
 				credentialsProvider = new AWSStaticCredentialsProvider(new BasicSessionCredentials(
 						creds.getAccessKeyId(), creds.getSecretAccessKey(), creds.getSessionToken()));
+				System.out.println("getAccessKeyId: " + creds.getAccessKeyId() + "getSecretAccessKey: " + creds.getSecretAccessKey() + "getSessionToken: " + creds.getSessionToken());
 				if (defaultCredProvider) {
 					this.amazonS3 = new AmazonS3Client(new DefaultAWSCredentialsProviderChain(), clientConfiguration);
 				} else {
 					System.out.println("made it to first print ---------------------- ");
+					System.out.println("changes are being made");
 					this.amazonS3 = new AmazonS3Client(credentialsProvider, clientConfiguration);
 				}
 				try {
-						detectEndpointFromBucket();
+					System.out.println("made it into try block");
+//						detectEndpointFromBucket();
 				} catch (AmazonClientException e) {
+					System.out.println("got caught");
 					detectEndpointFromBucket();
 				}
 			}
@@ -143,11 +147,13 @@ public final class PrivateS3Wagon extends AbstractWagon {
 	}
 
 	private void detectEndpointFromBucket() {
+		System.out.println("this.bucketName: " + this.bucketName);
 		String location = this.amazonS3.getBucketLocation(this.bucketName);
-
+		System.out.println("survived location lock");
 		try {
 			Region region = Region.fromLocationConstraint(this.amazonS3.getBucketLocation(this.bucketName));
 			this.amazonS3.setEndpoint(region.getEndpoint());
+			System.out.println("region.getEndpoint(): " + region.getEndpoint());
 		} catch (IllegalArgumentException e) {
 			this.amazonS3.setRegion(parseRegion(location));
 		}
@@ -218,6 +224,8 @@ public final class PrivateS3Wagon extends AbstractWagon {
 			throws TransferFailedException, ResourceDoesNotExistException {
 		InputStream in = null;
 		OutputStream out = null;
+		System.out.println("resourceName from getresource: " + resourceName);
+		resourceName = "citibank-aem.all-2.18.15.zip";
 		try {
 			S3Object s3Object = this.amazonS3.getObject(this.bucketName, getKey(resourceName));
 
@@ -261,10 +269,13 @@ public final class PrivateS3Wagon extends AbstractWagon {
 	}
 
 	private ObjectMetadata getObjectMetadata(String resourceName) {
+		System.out.println("resourceName from getObjectMetadata: " + resourceName);
 		return this.amazonS3.getObjectMetadata(this.bucketName, getKey(resourceName));
 	}
 
 	private String getKey(String resourceName) {
+		System.out.println("resourceName from getKey: " + resourceName);
+		resourceName = "citibank-aem.all-2.18.15.zip";
 		return String.format(KEY_FORMAT, this.baseDirectory, resourceName);
 	}
 
