@@ -132,11 +132,11 @@ public final class PrivateS3Wagon extends AbstractWagon {
 				} else {
 					this.amazonS3 = new AmazonS3Client(credentialsProvider, clientConfiguration);
 				}
-				try {
-						detectEndpointFromBucket();
-				} catch (AmazonClientException e) {
-					detectEndpointFromBucket();
-				}
+//				try {
+//						detectEndpointFromBucket();
+//				} catch (AmazonClientException e) {
+//					detectEndpointFromBucket();
+//				}
 			}
 
 	}
